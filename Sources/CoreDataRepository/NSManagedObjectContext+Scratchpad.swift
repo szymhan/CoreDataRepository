@@ -11,40 +11,45 @@ import CoreData
 import Foundation
 
 extension NSManagedObjectContext {
-    func performInScratchPad<Output>(
-        promise: @escaping Future<Output, CoreDataRepositoryError>.Promise,
-        _ block: @escaping (NSManagedObjectContext) -> Result<Output, CoreDataRepositoryError>
-    ) {
-        let scratchPad = scratchPadContext()
-        scratchPad.perform {
-            let result = block(scratchPad)
-            if case .failure = result {
-                scratchPad.rollback()
-            }
-            promise(result)
-        }
-    }
-
-    func performInScratchPad<Output>(
-        schedule: NSManagedObjectContext.ScheduledTaskType = .immediate,
+    public func performInScratchPad<Output>(
         _ block: @escaping (NSManagedObjectContext) throws -> Output
     ) async -> Result<Output, CoreDataRepositoryError> {
         let scratchPad = scratchPadContext()
-        let output: Output
         do {
-            output = try await scratchPad.perform(schedule: schedule) { try block(scratchPad) }
-        } catch let error as CoreDataRepositoryError {
-            await scratchPad.perform {
+            let output: Output = try await performInScratchPad(
+                context: scratchPad,
+                block: block
+            )
+            return .success(output)
+        }
+        catch let error as CoreDataRepositoryError {
+            scratchPad.perform {
                 scratchPad.rollback()
             }
             return .failure(error)
         } catch let error as NSError {
-            await scratchPad.perform {
+            scratchPad.perform {
                 scratchPad.rollback()
             }
-            return .failure(CoreDataRepositoryError.coreData(error))
+            return .failure(.coreData(error))
         }
-        return .success(output)
+    }
+
+    func performInScratchPad<Output>(
+        context: NSManagedObjectContext,
+        block: @escaping (NSManagedObjectContext) throws -> Output
+    ) async throws -> Output {
+        try await withCheckedThrowingContinuation { continuation in
+            context.perform {
+                do {
+                    let result = try block(context)
+                    continuation.resume(with: .success(result))
+                }
+                catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 
     func performAndWaitInScratchPad<Output>(

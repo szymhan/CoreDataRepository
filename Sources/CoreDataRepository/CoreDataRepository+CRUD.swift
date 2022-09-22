@@ -26,7 +26,7 @@ extension CoreDataRepository {
         _ item: Model,
         transactionAuthor: String? = nil
     ) async -> Result<Model, CoreDataRepositoryError> {
-        await context.performInScratchPad(schedule: .enqueued) { [context] scratchPad in
+        await context.performInScratchPad { scratchPad in
             scratchPad.transactionAuthor = transactionAuthor
             let object = Model.RepoManaged(context: scratchPad)
             object.create(from: item)
@@ -48,7 +48,7 @@ extension CoreDataRepository {
     ///     - Result<Model, CoreDataRepositoryError>
     ///
     public func read<Model: UnmanagedModel>(_ url: URL) async -> Result<Model, CoreDataRepositoryError> {
-        await context.performInChild(schedule: .enqueued) { readContext in
+        await context.performInChild { readContext in
             let id = try readContext.tryObjectId(from: url)
             let object = try readContext.notDeletedObject(for: id)
             let repoManaged: Model.RepoManaged = try object.asRepoManaged()
@@ -72,7 +72,7 @@ extension CoreDataRepository {
         with item: Model,
         transactionAuthor _: String? = nil
     ) async -> Result<Model, CoreDataRepositoryError> {
-        await context.performInScratchPad(schedule: .enqueued) { [context] scratchPad in
+        await context.performInScratchPad { scratchPad in
             let id = try scratchPad.tryObjectId(from: url)
             let object = try scratchPad.notDeletedObject(for: id)
             let repoManaged: Model.RepoManaged = try object.asRepoManaged()
@@ -99,7 +99,7 @@ extension CoreDataRepository {
         _ url: URL,
         transactionAuthor _: String? = nil
     ) async -> Result<Void, CoreDataRepositoryError> {
-        await context.performInScratchPad(schedule: .enqueued) { [context] scratchPad in
+        await context.performInScratchPad { scratchPad in
             let id = try scratchPad.tryObjectId(from: url)
             let object = try scratchPad.notDeletedObject(for: id)
             object.prepareForDeletion()

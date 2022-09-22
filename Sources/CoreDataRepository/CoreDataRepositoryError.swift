@@ -20,14 +20,12 @@ public enum CoreDataRepositoryError: Error, Equatable, Hashable {
         case .failedToGetObjectIdFromUrl:
             return NSLocalizedString(
                 "No NSManagedObjectID found that correlates to the provided URL.",
-                bundle: .module,
                 comment: "Error for when an ObjectID can't be found for the provided URL."
             )
         case .propertyDoesNotMatchEntity:
             return NSLocalizedString(
                 "There is a mismatch between a provided NSPropertyDescrption's entity and a NSEntityDescription. "
                     + "When a property description is provided, it must match any related entity descriptions.",
-                bundle: .module,
                 comment: "Error for when the developer does not provide a valid pair of NSAttributeDescription "
                     + "and NSPropertyDescription (or any of their child types)."
             )
@@ -35,13 +33,11 @@ public enum CoreDataRepositoryError: Error, Equatable, Hashable {
             return NSLocalizedString(
                 "The object corresponding to the provided NSManagedObjectID is an incorrect Entity or "
                     + "NSManagedObject subtype. It failed to cast to the requested type.",
-                bundle: .module,
                 comment: "Error for when an object is found for a given ObjectID but it is not the expected type."
             )
         case .fetchedObjectIsFlaggedAsDeleted:
             return NSLocalizedString(
                 "The object corresponding to the provided NSManagedObjectID is deleted and cannot be fetched.",
-                bundle: .module,
                 comment: "Error for when an object is fetched but is flagged as deleted and is no longer usable."
             )
         case let .coreData(error):
